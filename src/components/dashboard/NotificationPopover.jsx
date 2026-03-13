@@ -1,6 +1,6 @@
 import React from 'react';
 
-const NotificationPopover = ({ isOpen, onClose, notifications = [] }) => {
+const NotificationPopover = ({ isOpen, onClose, notifications = [], onMarkAllRead }) => {
     if (!isOpen) return null;
 
     return (
@@ -9,10 +9,10 @@ const NotificationPopover = ({ isOpen, onClose, notifications = [] }) => {
             <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
                 <h2 className="text-[18px] font-bold text-dark">Your notifications</h2>
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-[12px] font-bold text-dark rounded-[10px] transition-colors">
-                        Clear
-                    </button>
-                    <button className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-[12px] font-bold text-dark rounded-[10px] transition-colors">
+                    <button
+                        onClick={onMarkAllRead}
+                        className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-[12px] font-bold text-dark rounded-[10px] transition-colors"
+                    >
                         Mark all as read
                     </button>
                 </div>
@@ -23,7 +23,7 @@ const NotificationPopover = ({ isOpen, onClose, notifications = [] }) => {
                 {notifications.length > 0 ? (
                     notifications.map((notif, index) => (
                         <div
-                            key={index}
+                            key={notif.id || index}
                             className="flex items-start gap-4 px-8 py-6 hover:bg-gray-50 transition-colors cursor-pointer group border-b border-gray-50 last:border-0"
                         >
                             <div className="w-[64px] h-[64px] rounded-full bg-[#F3F7FA] shrink-0" />

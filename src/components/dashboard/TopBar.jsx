@@ -1,32 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Search, Bell } from 'lucide-react';
 import ProfilePopover from './ProfilePopover';
 import NotificationPopover from './NotificationPopover';
+import { fetchNotifications, markAllNotificationsRead } from '../../services/notificationService';
+
+const mapNotification = (n) => ({
+    id: n.id,
+    title: n.title || n.message || 'New notification',
+    timestamp: new Date(n.created_at || Date.now()).toLocaleString('en-US', {
+        weekday: 'short', hour: 'numeric', minute: '2-digit'
+    }),
+    actionLabel: 'View',
+    isUnread: !n.is_read,
+});
 
 const TopBar = ({ title, role, onAddStation }) => {
     const [showProfile, setShowProfile] = useState(false);
     const [showNotif, setShowNotif] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    const notifications = [
-        {
-            title: "Your coupon has been approved and is live.",
-            timestamp: "Thursday 2:44PM",
-            actionLabel: "View Coupon",
-            isUnread: true
-        },
-        {
-            title: "High redemption activity detected in the last 30 min.",
-            timestamp: "Thursday 2:44PM",
-            actionLabel: "View Transactions",
-            isUnread: true
-        },
-        {
-            title: "Your coupon has been Rejected",
-            timestamp: "Thursday 2:44PM",
-            actionLabel: "View Coupon",
-            isUnread: true
-        },
-    ];
+    useEffect(() => {
+        // Notifications are only for USER role in the backend.
+        // For OUTLET_ADMIN / SUPER_ADMIN we skip silently.
+        if (role === 'admin' || role === 'superadmin') return;
+        const load = async () => {
+            try {
+                const data = await fetchNotifications();
+                const list = Array.isArray(data?.data) ? data.data : [];
+                setNotifications(list.map(mapNotification));
+                setUnreadCount(list.filter(n => !n.is_read).length);
+            } catch {
+                // silently ignore if not permitted
+            }
+        };
+        load();
+    }, [role]);
+
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllNotificationsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
+            setUnreadCount(0);
+        } catch (err) {
+            console.error('Failed to mark notifications as read', err);
+        }
+    };
 
     return (
         <header className="h-[72px] flex items-center px-10 gap-4 shrink-0 bg-[#F3F7FA] relative z-40">
@@ -73,15 +92,18 @@ const TopBar = ({ title, role, onAddStation }) => {
                     className={`relative p-3 rounded-full transition-all ${showNotif ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
                 >
                     <Bell size={22} className="text-dark" />
-                    <span className="absolute top-2.5 right-2 w-[18px] h-[18px] bg-primary rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
-                        3
-                    </span>
+                    {unreadCount > 0 && (
+                        <span className="absolute top-2.5 right-2 w-[18px] h-[18px] bg-primary rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
                 </button>
 
                 <NotificationPopover
                     isOpen={showNotif}
                     onClose={() => setShowNotif(false)}
                     notifications={notifications}
+                    onMarkAllRead={handleMarkAllRead}
                 />
             </div>
 
