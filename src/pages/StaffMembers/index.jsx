@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { sidebarData, staffMembersData } from '../../data/dashboardData';
+import { sidebarData, superadminSidebarData, staffMembersData } from '../../data/dashboardData';
 import { Pencil, Trash2, Check, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import StaffTableRow from '../../components/dashboard/StaffTableRow';
 import AddEditStaffModal from '../../components/dashboard/AddEditStaffModal';
 import { COLORS } from '../../constants/colors';
 
-const StaffMembers = ({ onNavigate }) => {
+const StaffMembers = ({ onNavigate, userRole }) => {
     const { t } = useTranslation();
     const [selectedIds, setSelectedIds] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,7 +16,7 @@ const StaffMembers = ({ onNavigate }) => {
     const itemsPerPage = 20;
 
     const handleNavChange = (navId) => {
-        if (navId === 'dashboard') onNavigate?.('dashboard');
+        if (navId === 'dashboard' || navId === 'restaurants') onNavigate?.('dashboard');
         if (navId === 'coupons') onNavigate?.('coupons');
     };
 
@@ -59,12 +59,15 @@ const StaffMembers = ({ onNavigate }) => {
 
     const allSelected = selectedIds.length === currentStaff.length && currentStaff.length > 0;
 
+    const currentSidebarData = userRole === 'superadmin' ? superadminSidebarData : sidebarData;
+
     return (
         <DashboardLayout
-            sidebarData={sidebarData}
+            sidebarData={currentSidebarData}
             activeNav="staff"
             onNavChange={handleNavChange}
             title="Dashboard"
+            role={userRole}
         >
             <div className="flex flex-col gap-4 h-full font-onest">
                 {/* Combined Actions Row */}

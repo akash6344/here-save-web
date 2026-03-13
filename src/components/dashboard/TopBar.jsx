@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Search, Bell } from 'lucide-react';
 import ProfilePopover from './ProfilePopover';
 import NotificationPopover from './NotificationPopover';
@@ -6,6 +6,27 @@ import NotificationPopover from './NotificationPopover';
 const TopBar = ({ title, role, onAddStation }) => {
     const [showProfile, setShowProfile] = useState(false);
     const [showNotif, setShowNotif] = useState(false);
+    const profileRef = useRef(null);
+    const notifRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setShowProfile(false);
+            }
+            if (notifRef.current && !notifRef.current.contains(event.target)) {
+                setShowNotif(false);
+            }
+        };
+
+        if (showProfile || showNotif) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showProfile, showNotif]);
 
     const notifications = [
         {
@@ -64,7 +85,7 @@ const TopBar = ({ title, role, onAddStation }) => {
             </div>
 
             {/* Notifications */}
-            <div className="relative">
+            <div className="relative" ref={notifRef}>
                 <button
                     onClick={() => {
                         setShowNotif(!showNotif);
@@ -86,7 +107,7 @@ const TopBar = ({ title, role, onAddStation }) => {
             </div>
 
             {/* Avatar Row */}
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
                 <button
                     onClick={() => {
                         setShowProfile(!showProfile);
